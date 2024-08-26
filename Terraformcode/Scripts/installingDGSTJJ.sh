@@ -21,7 +21,7 @@
 # cd DevSecOps-Project
 
 # # Build the Docker image
-# sudo docker build --build-arg TMDB_V3_API_KEY=a752d7fd4e2c3cd63711690bf8a4025b -t netflix .
+# sudo docker build --build-arg TMDB_V3_API_KEY=<yourapikey> -t netflix .
 
 # # Run the Docker container
 # sudo docker run -d -p 8081:80 netflix:latest
