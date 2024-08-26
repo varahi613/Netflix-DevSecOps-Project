@@ -26,3 +26,14 @@ npm-debug.log*
 yarn.lock
 yarn-debug.log*
 yarn-error.log*
+
+Terraformcode/terraform.tfstate
+Terraformcode/terraform.tfstate.backup
+Terraformcode/.terraform.lock.hcl
+Terraformcode/.terraform
+Terraformcode/Ahmed.pem
+Terraformcode/terraform.tfvars
+Terraformcode/*.auto.tfvars
+Terraformcode/terraform.tfvars.json
+Terraformcode/*.auto.tfvars.json
+
