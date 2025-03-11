@@ -15,78 +15,78 @@ pipeline {
         }
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/Ahmedgit7/Netflix-DevSecOps-Project.git'
+                git branch: 'main', url: 'https://github.com/varahi613/Netflix-DevSecOps-Project.git'
             }
         }
-        stage('SonarQube Analysis') {
+        stage("Sonarqube Analysis") {
             steps {
                 withSonarQubeEnv('sonar-server') {
-                    sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix -Dsonar.projectKey=Netflix'''
+                    sh ''' 
+                        $SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectName=Netflix \
+                        -Dsonar.projectKey=Netflix 
+                    '''
                 }
             }
         }
-        stage('Quality Gate') {
+        stage("Quality Gate") {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
                 }
             }
         }
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh "npm install"
             }
         }
-        stage('OWASP FS Scan') {
+        stage('OWASP FS SCAN') {
             steps {
                 dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
-        stage('TRIVY FS Scan') {
+        stage('TRIVY FS SCAN') {
             steps {
-                sh 'trivy fs . > trivyfs.txt'
+                sh "trivy fs . > trivyfs.txt"
             }
         }
-        stage('Docker Build & Push') {
+        stage("Docker Build & Push") {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
                         sh '''
-                        docker build --build-arg TMDB_V3_API_KEY=<> -t netflix .
-                        docker tag netflix ahmed7860/netflix:latest
-                        docker push ahmed7860/netflix:latest
+                            docker build --build-arg TMDB_V3_API_KEY=aceb7f732794dcd45c86272d86914876 -t netflix .
+                            docker tag netflix ranjanidevops484358/netflix:latest
+                            docker push ranjanidevops484358/netflix:latest
                         '''
                     }
                 }
             }
         }
-        stage('TRIVY Image Scan') {
+        stage("TRIVY") {
             steps {
-                sh 'trivy image ahmed7860/netflix:latest > trivyimage.txt'
-            }
-        }
-        stage('Update Deployment YAML') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                        sh '''
-                        cd Kubernetes
-                        sed -i 's#image: ahmed7860/netflix:.*#image: ahmed7860/netflix:'${BUILD_NUMBER}'#' deployment.yml
-                        git config user.email "ahmedhshaikh786@example.com"
-                        git config user.name "Ahmed"
-                        git add deployment.yml
-                        git commit -m "Update image version to ${BUILD_NUMBER}"
-                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Ahmedgit7/Netflix-DevSecOps-Project.git main
-                        '''
-                    }
-                }
+                sh "trivy image ranjanidevops484358/netflix:latest > trivyimage.txt"
             }
         }
         stage('Deploy to Container') {
             steps {
-                sh 'docker run -d -p 8081:80 ahmed7860/netflix:latest'
+                sh 'docker run -d -p 8081:80 ranjanidevops484358/netflix:latest'
             }
+        }
+    }
+    post {
+        always {
+            emailext (
+                attachLog: true,
+                subject: "${currentBuild.result}",
+                body: """Project: ${env.JOB_NAME}<br/>
+                        Build Number: ${env.BUILD_NUMBER}<br/>
+                        URL: ${env.BUILD_URL}<br/>""",
+                to: 'ranjanidevops484@gmail.com',
+                attachmentsPattern: 'trivyfs.txt, trivyimage.txt'
+            )
         }
     }
 }
